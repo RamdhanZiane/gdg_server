@@ -1,21 +1,6 @@
 from main import *
-from mysql_databases_modules import *
+from modules import *
 
-
-
-
-def GetUserData(user_id) :
-	x = {}
-	
-	user = Users.query.filter_by(user_id=user_id).first()
-	if not(user) :
-		return 404
-	
-	#if current_user.is_authenticated :
-	x['user_id'] = user.user_id
-	x['created_time'] = user.created_time
-	
-	return x
 
 
 
@@ -39,43 +24,83 @@ def base():
 
 
 
-@main_route.route('/login', methods=['GET' , 'POST'])
-def login():
+
+@main_route.route('/auth/signin', methods=['GET'])
+def signin():
 	pass
 
 
-@main_route.route('/logout', methods=['GET'])
+@main_route.route('/auth/signup', methods=['GET'])
 @login_required
-def logout():
+def signup():
 	pass
-
-
-@main_route.route('/add_admin', methods=['POST'])
+	
+	
+@main_route.route('/auth/signout', methods=['GET'])
 @login_required
-def add_admin():
+def signout():
 	pass
 
 
-@main_route.route('/delete_admin', methods=['POST'])
+	
+@main_route.route('/member/add_member', methods=['GET'])
 @login_required
-def delete_admin():
+def add_member():
 	pass
 
 
-@main_route.route('/add_users', methods=['GET' , 'POST'])
+
+@main_route.route('/member/extra_add', methods=['GET'])
 @login_required
-def add_users():
+def extra_add():
 	pass
 
 
 
-@main_route.route('/home', methods=['GET'])
-def home():
+@main_route.route('/member/delete_member', methods=['GET'])
+@login_required
+def delete_member():
 	pass
 
 
-@main_route.route('/user/<user_id>', methods=['GET'])
-def user(user_id):
+
+
+@main_route.route('/member/update_member', methods=['GET'])
+@login_required
+def update_member():
+	pass
+
+
+
+@main_route.route('/member/get_all_members', methods=['GET'])
+def get_all_members():
+	#filter_by
+	#filter_by_name
+	#filter_by_departement_name
+	
+	#sort_by
+	#sort_by_role
+	#sort_by_season
+	
+	pass
+
+
+
+@main_route.route('/member/<member_id>', methods=['GET'])
+def member(member_id):
+	pass
+
+
+
+
+@main_route.route('/depart/get_all_departments', methods=['GET'])
+def get_all_departments():
+	pass
+
+
+
+@main_route.route('/depart/<department_id>', methods=['GET'])
+def department(department_id):
 	pass
 
 
