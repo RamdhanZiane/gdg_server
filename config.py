@@ -1,7 +1,8 @@
+import uuid
+import os
 
 
-
-IP_ADDRESS = '192.168.100.10'
+IP_ADDRESS = '192.168.100.7'
 PORT = '7000'
 
 
@@ -23,8 +24,8 @@ SSL_CERTIFICATE_PATH = EXECUTE_PATH + "/ssl_certificate.crt"
 
 
 
-MYSQL_SERVER = 'mysql+pymysql://root:password@192.168.100.20:3306'
-MYSQL_DATABASE = MYSQL_SERVER + '/test'
+MYSQL_SERVER = 'mysql+pymysql://root:rmzmrrmzmr@192.168.100.20:3306'
+MYSQL_DATABASE = MYSQL_SERVER + '/oar'
 
 
 
