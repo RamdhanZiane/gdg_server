@@ -10,7 +10,7 @@ EVENTS_ROLES = ['team_leader' , 'organizer' , 'participant']
 
 Users_Activities = mysql.Table(
     "members__activities",
-    mysql.Column("member_id", mysql.String(100), mysql.ForeignKey("members.member_id", ondelete="CASCADE")),
+    mysql.Column("id", mysql.String(100), mysql.ForeignKey("members.id", ondelete="CASCADE")),
     mysql.Column("activity_id", mysql.String(100), mysql.ForeignKey("activities.activity_id", ondelete="CASCADE")),
 )
 
@@ -18,7 +18,7 @@ Users_Activities = mysql.Table(
 
 Users_Events = mysql.Table(
 	"members__events",
-	mysql.Column("member_id", mysql.String(100), mysql.ForeignKey("members.member_id", ondelete="CASCADE")),
+	mysql.Column("id", mysql.String(100), mysql.ForeignKey("members.id", ondelete="CASCADE")),
 	mysql.Column("event_id", mysql.String(100), mysql.ForeignKey("events.event_id", ondelete="CASCADE")),
 
 	mysql.Column('event_role', mysql.String(100))
@@ -28,7 +28,7 @@ Users_Events = mysql.Table(
 
 Users_Departments = mysql.Table(
 	"members__departments",
-	mysql.Column("member_id", mysql.String(100), mysql.ForeignKey("members.member_id", ondelete="CASCADE")),
+	mysql.Column("id", mysql.String(100), mysql.ForeignKey("members.id", ondelete="CASCADE")),
 	mysql.Column("department_id", mysql.String(100), mysql.ForeignKey("departments.department_id", ondelete="CASCADE")),
 
 	mysql.Column('is_comanager',mysql.Boolean() , default=False),
@@ -44,7 +44,7 @@ Users_Departments = mysql.Table(
 class Members(UserMixin, mysql.Model):
 	__tablename__ = 'members' 
 	
-	member_id = mysql.Column(mysql.String(100), primary_key=True , unique=True) 
+	id = mysql.Column(mysql.Integer, primary_key=True , unique=True) 
 	full_name = mysql.Column(mysql.String(100) , default='') 
 	email = mysql.Column(mysql.String(100) , default='') 
 	joined_time = mysql.Column(mysql.DateTime(timezone=True) , default='') 
@@ -57,7 +57,10 @@ class Members(UserMixin, mysql.Model):
 	member_events = mysql.relationship('Events', secondary=Users_Events, backref='member',cascade="all, delete",passive_deletes=True)
 	member_departments = mysql.relationship('Departments', secondary=Users_Departments, backref='member',cascade="all, delete",passive_deletes=True)
 
+	def __repr__(self):
+		return '<member {}>'.format(self.full_name)
 	#mysql.Column(mysql.DateTime(timezone=True), default=mysql.func.now())
+# user_manager = UserManager(app, db, Client)
 
 
 
@@ -74,7 +77,7 @@ class Activities(mysql.Model):
 class Events(mysql.Model):
 	__tablename__ = 'events'
 
-	event_id = mysql.Column(mysql.String(100), primary_key=True , unique=True)
+	event_id = mysql.Column(mysql.Integer, primary_key=True , unique=True)
 	event_title = mysql.Column(mysql.String(100) , default='') 
 	started_time = mysql.Column(mysql.DateTime(timezone=True), default=mysql.func.now())
 	ended_time = mysql.Column(mysql.DateTime(timezone=True), default=mysql.func.now())

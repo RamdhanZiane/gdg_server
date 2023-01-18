@@ -72,10 +72,21 @@ def signin():
 	pass
 
 
-@auth.route('/signup', methods=['GET'])
-@login_required
+@auth.route('/signup', methods=['POST'])
 def signup():
-	pass
+	if request.method == "POST":
+		name = request.form["username"]
+		email = request.form["email"]
+		user = Members(
+		    name,
+		    email,
+		)
+		db.session.add(user)
+		db.session.commit()
+		return {
+			"username":name,
+			"email":email
+		}
 	
 	
 @auth.route('/signout', methods=['GET'])
