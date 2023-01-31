@@ -4,6 +4,9 @@ from . import db
 from .models import Members, Events, Activities
 from . import models
 import json
+from datetime import date, datetime
+
+from .serializers import ActivitySchema
 
 views = Blueprint('views', __name__)
 
@@ -93,88 +96,102 @@ def department(department_id):
 #     description=f"No user named '{username}'."
 # )
 
+# @views.route('/events/create', methods=['POST'])
+# @views.route('/events/<int:id>', methods=['GET', 'UPDATE'])
+
+
 @views.route('/events', methods=['GET'])
 def getEventList():
-	# events = db.session.query(models.Members)
 	events = Events.query.all()
-	return jsonify(events)
+	# return jsonify(events)
+	# return Events.fs_get_delete_put_post(id)
+	event_list = [{column.name: getattr(event, column.name) for column in Events.__table__.columns} for event in events]
+	return jsonify([event.to_dict() for event in events])
 
 @views.route('/events/create', methods=['POST'])
 def create_event():
-	# data = request.get_json()
-
-	event_id = request.form['event_id']
-	name = request.form['name']
-	age = request.form['age']
-	position = request.form['position']
-	event = Events()
-
+	data = request.get_json()
+	try:
+		event = Events(**data)
+		event.validate_data(data)
+	except ValueError as error:
+		return jsonify({'error': str(error)}), 400
+	except TypeError as error:
+		return jsonify({'error': str(error)}), 400
 	db.session.add(event)
 	db.session.commit()
-	return {
-		jsonify(event)
-	}
+	return jsonify(event.to_dict())
 
-@views.route('/events/<int:id>', methods=['GET'])
+@views.route('/events/<id>', methods=['GET'])
 def get_event(id):
-	event = Events.query.filter_by(event_id=id).first()
+	event = Events.query.get(id)
 	if event:
-		return jsonify(event)
-	return {
-		'status_code':404,
-		'message':f'No event with ID {id} found'
-	}
+		return jsonify(event.to_dict())
+	return jsonify({"error":"No event with such id exists"}), 404
 
-@views.route('/events/<int:id>/delete', methods=['DELETE'])
+@views.route('/events/<id>/update', methods=['PUT'])
+def update_event(id):
+	event = Events.query.get(id)
+	if event:
+		data = request.get_json()
+		for key, value in data.items():
+			setattr(event, key, value)
+		event.validate_data(data)
+		db.session.commit()
+		return jsonify(event.to_dict())
+	return jsonify({"error":"No event with such id exists"}), 404
+
+@views.route('/events/<id>/delete', methods=['DELETE'])
 def delete_event(id):
-	event = Events.query.filter_by(event_id=id).first()
+	event = Events.query.get(id)
 	if event:
 		db.session.delete(event)
 		db.session.commit()
-		return {
-			'message':'No such event exists',
-			'status_code':204
-		}
-	return {
-		'status_code':404
-	}
+		return jsonify(event.to_dict()), 204
+	return jsonify({"error":"No event with such id exists"}), 404
 
 
 
 @views.route('/activities', methods=['GET'])
-def getEventList():
-	# activities = db.session.query(models.Members)
-	activities = activities.query.all()
-	return jsonify(activities)
+def getActivityList():
+	
+	# activities = Activities.query.all()
+	# list = [act.serialize() for act in activities]
+	# return json.dumps(list)
+	
+	activities = Activities.query.all()
+	activity_schema = ActivitySchema()
+	return jsonify(activity_schema.dump(activities, many=True))
 
 @views.route('/activities/create', methods=['POST'])
-def create_event():
-	# data = request.get_json()
+def create_activity():
+	# activity_name = request.form['activity_name']
+	# created_time = request.form['created_time']
+	# activity = Activities(activity_name, created_time)
 
-	event_id = request.form['event_id']
-	name = request.form['name']
-	age = request.form['age']
-	position = request.form['position']
-	activity = Activities()
+	# db.session.add(activity)
+	# db.session.commit()
+	# return json.dumps(activity.serialize())
 
-	db.session.add(event)
-	db.session.commit()
-	return {
-		jsonify(event)
-	}
+	activity_schema = ActivitySchema()
+	activity_data = activity_schema.load(request.json, session=db.session)
+	activity = Activities(activity_data)
+	# db.session.add(activity)
+	# db.session.commit()
+	return jsonify(activity_data)
 
 @views.route('/activities/<int:id>', methods=['GET'])
-def get_event(id):
-	event = Activities.query.filter_by(activity_id=id).first()
-	if event:
-		return jsonify(event)
+def get_activity(id):
+	activity = Activities.query.filter_by(activity_id=id).first()
+	if activity:
+		return jsonify(activity)
 	return {
 		'status_code':404,
 		'message':f'No activity with ID {id} found'
 	}
 
 @views.route('/activities/<int:id>/delete', methods=['DELETE'])
-def delete_event(id):
+def delete_activity(id):
 	activity = Activities.query.filter_by(activity_id=id).first()
 	if activity:
 		db.session.delete(activity)

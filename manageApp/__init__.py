@@ -1,17 +1,29 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_marshmallow import Marshmallow
 from os import path
 from flask_login import LoginManager
+from datetime import date, datetime
+import json
 
-db = SQLAlchemy()
 DB_NAME = "database.db"
+db = SQLAlchemy()
+ma = Marshmallow()
+
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (datetime, date)):
+            return obj.strftime("%d/%m/%Y")
+        return json.JSONEncoder.default(self, obj)
 
 
 def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'App_Secret_key'
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
+    # app.json_encoder = CustomJSONEncoder
     db.init_app(app)
+    ma.init_app(app)
 
     from .views import views
     from .auth import auth

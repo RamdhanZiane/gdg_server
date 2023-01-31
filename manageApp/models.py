@@ -1,6 +1,9 @@
 from . import db as mysql
 from flask_login import UserMixin
 from sqlalchemy.sql import func
+import uuid
+from datetime import datetime
+from sqlalchemy.inspection import inspect
 
 
 USERS_ROLES = ['lead' , 'hr' , 'comanager' , 'member' , 'alumni']
@@ -10,7 +13,7 @@ EVENTS_ROLES = ['team_leader' , 'organizer' , 'participant']
 
 Users_Activities = mysql.Table(
     "members__activities",
-    mysql.Column("id", mysql.String(100), mysql.ForeignKey("members.id", ondelete="CASCADE")),
+    mysql.Column("member_id", mysql.String(100), mysql.ForeignKey("members.member_id", ondelete="CASCADE")),
     mysql.Column("activity_id", mysql.String(100), mysql.ForeignKey("activities.activity_id", ondelete="CASCADE")),
 )
 
@@ -18,7 +21,7 @@ Users_Activities = mysql.Table(
 
 Users_Events = mysql.Table(
 	"members__events",
-	mysql.Column("id", mysql.String(100), mysql.ForeignKey("members.id", ondelete="CASCADE")),
+	mysql.Column("member_id", mysql.String(100), mysql.ForeignKey("members.member_id", ondelete="CASCADE")), # PRIMARY_KEY=TRUE
 	mysql.Column("event_id", mysql.String(100), mysql.ForeignKey("events.event_id", ondelete="CASCADE")),
 
 	mysql.Column('event_role', mysql.String(100))
@@ -28,7 +31,7 @@ Users_Events = mysql.Table(
 
 Users_Departments = mysql.Table(
 	"members__departments",
-	mysql.Column("id", mysql.String(100), mysql.ForeignKey("members.id", ondelete="CASCADE")),
+	mysql.Column("member_id", mysql.String(100), mysql.ForeignKey("members.member_id", ondelete="CASCADE")), # PRIMARYKEY=TRUE
 	mysql.Column("department_id", mysql.String(100), mysql.ForeignKey("departments.department_id", ondelete="CASCADE")),
 
 	mysql.Column('is_comanager',mysql.Boolean() , default=False),
@@ -44,7 +47,7 @@ Users_Departments = mysql.Table(
 class Members(UserMixin, mysql.Model):
 	__tablename__ = 'members' 
 	
-	id = mysql.Column(mysql.Integer, primary_key=True , unique=True) 
+	member_id = mysql.Column(mysql.String(100), primary_key=True , unique=True , default=uuid.uuid4().hex) 
 	full_name = mysql.Column(mysql.String(100) , default='') 
 	email = mysql.Column(mysql.String(100) , default='') 
 	joined_time = mysql.Column(mysql.DateTime(timezone=True) , default='') 
@@ -57,41 +60,71 @@ class Members(UserMixin, mysql.Model):
 	member_events = mysql.relationship('Events', secondary=Users_Events, backref='member',cascade="all, delete",passive_deletes=True)
 	member_departments = mysql.relationship('Departments', secondary=Users_Departments, backref='member',cascade="all, delete",passive_deletes=True)
 
-	def __repr__(self):
-		return '<member {}>'.format(self.full_name)
 	#mysql.Column(mysql.DateTime(timezone=True), default=mysql.func.now())
-# user_manager = UserManager(app, db, Client)
 
 
 
 class Activities(mysql.Model):
 	__tablename__ = 'activities' 
 	
-	activity_id = mysql.Column(mysql.String(100), primary_key=True , unique=True) 
+	activity_id = mysql.Column(mysql.Integer, primary_key=True , unique=True) 
 	activity_name = mysql.Column(mysql.String(100) , default='') 
-	created_time = mysql.Column(mysql.DateTime(timezone=True) , default='') 
+	created_time = mysql.Column(mysql.Date() , default='') 
 	
 	activity_members = mysql.relationship('Members', secondary=Users_Activities, backref='activity' ,cascade="all, delete",passive_deletes=True)
 
+	def __init__(self, name, time):
+		self.activity_name = name
+		self.created_time = datetime.strptime(time, '%d/%m/%Y')
+
+	def serialize(self):
+		return { 
+		'activity_id': self.activity_id,
+	    'activity_name': self.activity_name,
+		'created_time': self.created_time.isoformat()
+	    }
 
 class Events(mysql.Model):
 	__tablename__ = 'events'
 
-	event_id = mysql.Column(mysql.Integer, primary_key=True , unique=True)
+	event_id = mysql.Column(mysql.String(100), primary_key=True , unique=True , default=uuid.uuid4().hex)
 	event_title = mysql.Column(mysql.String(100) , default='') 
 	started_time = mysql.Column(mysql.DateTime(timezone=True), default=mysql.func.now())
 	ended_time = mysql.Column(mysql.DateTime(timezone=True), default=mysql.func.now())
 	
 	event_members = mysql.relationship('Members', secondary=Users_Events, backref='event' ,cascade="all, delete",passive_deletes=True)
 
+	def to_dict(model_instance, query_instance=None):
+		if hasattr(model_instance, '__table__'):
+			return {c.name: str(getattr(model_instance, c.name)) for c in model_instance.__table__.columns}
+		else:
+			cols = query_instance.column_descriptions
+			return { cols[i]['name'] : model_instance[i]  for i in range(len(cols)) }
+
+	def from_dict(dict, model_instance):
+		for c in model_instance.__table__.columns:
+			setattr(model_instance, c.name, dict[c.name])
+
+	def validate_data(self, data):
+		keys = data.keys()
+		if 'started_time' in keys:
+			value = datetime.strptime(data['started_time'], '%d/%m/%Y')
+			if not value:
+				raise ValueError("Event started_date must be in format 'dd/mm/yyyy'")
+			else:
+				self.started_time = value
+		if 'ended_time' in keys:
+			value = datetime.strptime(data['ended_time'], '%d/%m/%Y')
+			if not value:
+				raise ValueError("Event ended_date must be in format 'dd/mm/yyyy'")
+			else:
+				self.ended_time = value
 
 
 class Departments(mysql.Model):
 	__tablename__ = 'departments'
 
-	department_id = mysql.Column(mysql.String(100), primary_key=True , unique=True)
+	department_id = mysql.Column(mysql.String(100), primary_key=True , unique=True , default=uuid.uuid4().hex)
 	departments_name = mysql.Column(mysql.String(100) , default='') 
 	
 	department_members = mysql.relationship('Members', secondary=Users_Departments, backref='department' ,cascade="all, delete",passive_deletes=True)
-
-
