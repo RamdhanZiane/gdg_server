@@ -1,0 +1,9 @@
+flask
+flask_login
+flask_SQLAlchemy
+flask_caching
+flask_sessionstore
+
+pymysql
+cryptography
+uuid
