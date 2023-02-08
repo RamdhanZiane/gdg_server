@@ -10,5 +10,4 @@ with app.app_context():
 	
 	
 if __name__ == '__main__':
-	
-	app.run(host=IP_ADDRESS , port=PORT , ssl_context=(SSL_CERTIFICATE_PATH , SSL_KEY_PATH))#
+    app.run(debug=True)
