@@ -1,12 +1,12 @@
-from manageApp import create_app , mysql
+from manageApp import create_app , db
 
 from config import *
 
 app = create_app()
 
 
-with app.app_context():
-	mysql.create_all() 
+# with app.app_context():
+# 	app.create_all() 
 	
 	
 if __name__ == '__main__':

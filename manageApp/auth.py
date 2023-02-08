@@ -1,10 +1,10 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
 from .models import Members
 from werkzeug.security import generate_password_hash, check_password_hash
-from . import mysql
+from . import db as auth
 from flask_login import login_user, login_required, logout_user, current_user
 
-import dns.resolver
+# import dns.resolver
 import socket
 import smtplib , imaplib
 import re
@@ -17,7 +17,7 @@ auth = Blueprint('auth', __name__)
 
 def is_admin(user_id) :
 	is_admin = Members.query.filter(Members.member_id==user_id,
-									mysql.or_(Members.role=='leader',Members.role=='hr')).first()
+									auth.or_(Members.role=='leader',Members.role=='hr')).first()
 	if is_admin:
 		return True
 		

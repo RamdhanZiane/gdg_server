@@ -1,6 +1,6 @@
 from flask import Blueprint, request, flash, jsonify
 from flask_login import login_required, current_user
-from . import mysql
+from . import db as mysql
 import json
 from .models import Members, Activities, Events, Departments, USERS_ROLES, EVENTS_ROLES
 
